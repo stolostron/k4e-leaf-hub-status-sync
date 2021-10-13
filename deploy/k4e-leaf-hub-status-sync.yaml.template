@@ -1,0 +1,95 @@
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k4e-leaf-hub-status-sync
+subjects:
+- kind: ServiceAccount
+  name: k4e-leaf-hub-status-sync
+  namespace: open-cluster-management
+roleRef:
+  kind: ClusterRole
+  name: k4e-leaf-hub-status-sync
+  apiGroup: rbac.authorization.k8s.io
+---
+
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: k4e-leaf-hub-status-sync
+rules:
+- apiGroups:
+  - "management.k4e.io"
+  resources:
+  - edgedevices
+  - edgedevices/finalizers
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - configmaps
+  - events
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: k4e-leaf-hub-status-sync
+  namespace: open-cluster-management
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: k4e-leaf-hub-status-sync
+  namespace: open-cluster-management
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: k4e-leaf-hub-status-sync
+  template:
+    metadata:
+      labels:
+        name: k4e-leaf-hub-status-sync
+    spec:
+      serviceAccountName: k4e-leaf-hub-status-sync
+      containers:
+        - name: k4e-leaf-hub-status-sync
+          image: $IMAGE
+          args:
+            - '--zap-devel=true'
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                 apiVersion: v1
+                 fieldPath: metadata.namespace
+            - name: SYNC_SERVICE_PROTOCOL
+              value: "http"
+            - name: SYNC_SERVICE_HOST
+              value: sync-service-ess.sync-service.svc.cluster.local
+            - name: SYNC_SERVICE_PORT
+              value: "$SYNC_SERVICE_PORT"
+            - name: LH_ID
+              value: "$LH_ID"
+            - name: PERIODIC_SYNC_INTERVAL
+              value: 5s
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                 apiVersion: v1
+                 fieldPath: metadata.namespace
