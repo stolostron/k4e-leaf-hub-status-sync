@@ -28,6 +28,16 @@ rules:
   - watch
   - update
 - apiGroups:
+  - "coordination.k8s.io"
+  resources:
+  - leases
+  verbs:
+  - get
+  - list
+  - watch
+  - update
+  - create
+- apiGroups:
   - ""
   resources:
   - pods
