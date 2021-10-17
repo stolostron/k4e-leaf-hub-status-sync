@@ -102,6 +102,7 @@ func (bundle *EdgeDeviceStatusBundle) createManagedClusterFromEdgeDevice(
 
 	managedCluster.SetUID(edgeDevice.GetUID())
 	managedCluster.SetResourceVersion(edgeDevice.GetResourceVersion())
+	managedCluster.SetName(edgeDevice.GetName())
 	helpers.SetMetaDataAnnotation(managedCluster, edgeDeviceAnnotation, bundle.getEdgeDeviceAsString(edgeDevice))
 
 	return managedCluster
