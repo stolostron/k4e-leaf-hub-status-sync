@@ -33,3 +33,15 @@ func SetMetaDataAnnotation(object metav1.Object, key string, value string) {
 
 	object.SetAnnotations(annotations)
 }
+
+// SetMetaDataLabel sets metadata label on the given object.
+func SetMetaDataLabel(object metav1.Object, key string, value string) {
+	labels := object.GetLabels()
+	if labels == nil {
+		labels = make(map[string]string)
+	}
+
+	labels[key] = value
+
+	object.SetLabels(labels)
+}

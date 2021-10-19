@@ -8,11 +8,15 @@ import (
 	clusterv1 "github.com/open-cluster-management/api/cluster/v1"
 	"github.com/open-cluster-management/k4e-leaf-hub-status-sync/pkg/helpers"
 	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 )
 
 const (
 	edgeDeviceAnnotation = "hub-of-hubs.open-cluster-management.io/edge-device-resource"
+	vendorLabel          = "vendor"
+	nameLabel            = "name"
+	edgeDeviceVendor     = "EdgeDevice"
 )
 
 // NewEdgeDeviceStatusBundle creates a new instance of EdgeDeviceStatusBundle.
@@ -103,7 +107,12 @@ func (bundle *EdgeDeviceStatusBundle) createManagedClusterFromEdgeDevice(
 	managedCluster.SetUID(edgeDevice.GetUID())
 	managedCluster.SetResourceVersion(edgeDevice.GetResourceVersion())
 	managedCluster.SetName(edgeDevice.GetName())
+	managedCluster.SetCreationTimestamp(edgeDevice.CreationTimestamp)
+	helpers.SetMetaDataLabel(managedCluster, vendorLabel, edgeDeviceVendor)
+	helpers.SetMetaDataLabel(managedCluster, nameLabel, edgeDevice.GetName())
 	helpers.SetMetaDataAnnotation(managedCluster, edgeDeviceAnnotation, bundle.getEdgeDeviceAsString(edgeDevice))
+
+	bundle.fillManagedClusterConditions(managedCluster, edgeDevice)
 
 	return managedCluster
 }
@@ -115,4 +124,31 @@ func (bundle *EdgeDeviceStatusBundle) getEdgeDeviceAsString(edgeDevice *devicev1
 	}
 
 	return string(payloadBytes)
+}
+
+func (bundle *EdgeDeviceStatusBundle) fillManagedClusterConditions(managedCluster *clusterv1.ManagedCluster,
+	edgeDevice *devicev1alpha1.EdgeDevice) {
+	managedCluster.Status.Conditions = append(managedCluster.Status.Conditions, clusterv1.StatusCondition{
+		Type:               "HubAcceptedManagedCluster",
+		Status:             "True",
+		LastTransitionTime: metav1.NewTime(edgeDevice.Spec.RequestTime.Time),
+		Reason:             "HubClusterAdminAccepted",
+		Message:            "Accepted by hub cluster admin",
+	})
+
+	managedCluster.Status.Conditions = append(managedCluster.Status.Conditions, clusterv1.StatusCondition{
+		Type:               "ManagedClusterJoined",
+		Status:             "True",
+		LastTransitionTime: metav1.NewTime(edgeDevice.Spec.RequestTime.Time),
+		Reason:             "ManagedClusterJoined",
+		Message:            "Managed cluster joined",
+	})
+
+	managedCluster.Status.Conditions = append(managedCluster.Status.Conditions, clusterv1.StatusCondition{
+		Type:               "ManagedClusterConditionAvailable",
+		Status:             "True",
+		LastTransitionTime: metav1.NewTime(edgeDevice.Status.LastSeenTime.Time),
+		Reason:             "ManagedClusterAvailable",
+		Message:            "Managed cluster is available",
+	})
 }
