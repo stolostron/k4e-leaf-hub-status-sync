@@ -115,7 +115,7 @@ func (bundle *EdgeDeviceStatusBundle) createManagedClusterFromEdgeDevice(
 	managedCluster.SetUID(edgeDevice.GetUID())
 	managedCluster.SetResourceVersion(edgeDevice.GetResourceVersion())
 	managedCluster.SetName(edgeDevice.GetName())
-	managedCluster.SetCreationTimestamp(edgeDevice.CreationTimestamp)
+	managedCluster.SetCreationTimestamp(edgeDevice.GetCreationTimestamp())
 	helpers.SetMetaDataLabel(managedCluster, vendorLabel, edgeDeviceVendor)
 	helpers.SetMetaDataLabel(managedCluster, nameLabel, edgeDevice.GetName())
 	helpers.SetMetaDataAnnotation(managedCluster, edgeDeviceAnnotation, bundle.getEdgeDeviceAsString(edgeDevice))
