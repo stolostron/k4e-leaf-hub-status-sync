@@ -9,6 +9,7 @@ import (
 	"github.com/open-cluster-management/k4e-leaf-hub-status-sync/pkg/helpers"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 )
 
@@ -103,6 +104,12 @@ func (bundle *EdgeDeviceStatusBundle) getObjectIndexByUID(uid types.UID) (int, e
 func (bundle *EdgeDeviceStatusBundle) createManagedClusterFromEdgeDevice(
 	edgeDevice *devicev1alpha1.EdgeDevice) *clusterv1.ManagedCluster {
 	managedCluster := &clusterv1.ManagedCluster{}
+
+	managedCluster.SetGroupVersionKind(schema.GroupVersionKind{
+		Group:   "cluster.open-cluster-management.io",
+		Version: "v1",
+		Kind:    "ManagedCluster",
+	})
 
 	managedCluster.SetUID(edgeDevice.GetUID())
 	managedCluster.SetResourceVersion(edgeDevice.GetResourceVersion())
